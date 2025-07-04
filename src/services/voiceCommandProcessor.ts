@@ -1,8 +1,8 @@
-import { navigate } from '@reach/router';
-import { speechService } from './speechService';
-import { notificationService } from './notificationService';
+import { SpeechService as speechService } from "./speechService";
+import { notificationService } from "./notificationService";
 
 type CommandHandler = () => void;
+type NavigateFunction = (path: string) => void;
 
 interface VoiceCommand {
   patterns: string[];
@@ -12,34 +12,42 @@ interface VoiceCommand {
 
 class VoiceCommandProcessor {
   private commands: VoiceCommand[] = [];
+  private navigate: NavigateFunction | null = null;
 
   constructor() {
     this.initializeCommands();
   }
 
+  setNavigate(navigateFunc: NavigateFunction) {
+    this.navigate = navigateFunc;
+    this.initializeCommands();
+  }
+
   private initializeCommands() {
+    this.commands = [];  // Reset commands before re-initializing
+    
     // Navigation commands
     this.registerCommand({
       patterns: ['go to courses', 'show courses', 'open courses'],
-      handler: () => navigate('/courses'),
+      handler: () => this.navigate?.('/courses'),
       description: 'Navigate to courses page'
     });
 
     this.registerCommand({
       patterns: ['show my learning', 'open my learning', 'go to my learning'],
-      handler: () => navigate('/my-learning'),
+      handler: () => this.navigate?.('/my-learning'),
       description: 'Navigate to my learning page'
     });
 
     this.registerCommand({
       patterns: ['open assistant', 'show assistant', 'talk to assistant'],
-      handler: () => navigate('/assistant'),
+      handler: () => this.navigate?.('/assistant'),
       description: 'Open AI assistant'
     });
 
     this.registerCommand({
       patterns: ['go home', 'take me home', 'show home'],
-      handler: () => navigate('/'),
+      handler: () => this.navigate?.('/'),
       description: 'Navigate to home page'
     });
 
