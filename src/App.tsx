@@ -9,22 +9,19 @@ import MyLearningPage from './pages/MyLearningPage';
 import AiAssistantPage from './pages/AiAssistantPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import { AuthProvider } from './components/auth/AuthProvider';
+import { usePWA } from './hooks/usePWA';
 
 const LoadingScreen = () => {
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
   
   const tips = [
-    'Start by designing your UI before diving into complex backend features.',
-    "Use the '+' button to upload and incorporate custom images into your app.",
-    'Your app preview will automatically refresh when new changes are ready.',
-    'Connect with fellow developers in our Discord to share and learn together.',
-    'Need help? Ask questions in the AI chat panel located on the right side.',
-    'Show screenshots to the AI to get help with visual issues or inspiration.',
-    "Share your creation with others by clicking 'Publish' to deploy your app.",
-    'Subscribe to choose custom subdomains and remove watermarks from apps.',
-    'Add a knowledge.md file to teach the AI about specific technologies.',
-    "Track your progress and review code changes using the 'Review' button.",
-    "Advanced users can edit code directly in the 'Code' tab - use with care!",
+    'Get personalized course recommendations based on your learning style',
+    'Track your progress and earn badges as you learn',
+    'Practice with AI-generated quizzes tailored to your level',
+    'Connect with the learning community to share insights',
+    'Use voice commands to interact with your AI learning assistant',
+    'Access your courses offline with our PWA technology',
   ];
 
   useEffect(() => {
@@ -38,53 +35,36 @@ const LoadingScreen = () => {
   }, []);
 
   return (
-    <div className="fixed inset-0" style={{ fontFamily: 'Inter, sans-serif' }}>
-      <div className="relative size-full">
-        <div className="absolute inset-0 bg-[#f9f9f9] flex size-full flex-col items-center justify-center gap-4 p-8 text-center">
-          <div className="relative flex items-center justify-center w-10 h-10 bg-white border rounded-full">
-            <div className="absolute h-10 w-10 rounded-full animate-spin bg-gradient-to-b from-black/50 to-transparent"></div>
-            <div className="absolute flex items-center justify-center bg-white rounded-full h-[38px] w-[38px]">
-              <svg
-                width={14 * (1920 / 1084)}
-                height={14}
-                viewBox="0 0 1920 1084"
-                fill="black"
-                xmlns="http://www.w3.org/2000/svg"
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50">
+      <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
+        <div className="relative flex items-center justify-center w-16 h-16 mb-8">
+          <div className="absolute w-full h-full rounded-full animate-spin bg-gradient-to-r from-blue-500 to-indigo-600 opacity-25"></div>
+          <div className="absolute w-12 h-12 bg-white rounded-full"></div>
+          <svg className="relative w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+        </div>
+
+        <div className="text-xl font-semibold text-gray-900 mb-4">
+          Loading BrainWave
+        </div>
+
+        <div className="relative h-[60px] w-[280px] overflow-hidden">
+          <div className="absolute inset-x-0 top-0 h-4 z-10 bg-gradient-to-b from-blue-50 to-transparent"></div>
+          <div
+            className="transition-transform duration-500 ease-in-out"
+            style={{ transform: `translateY(-${currentTipIndex * 40}px)` }}
+          >
+            {tips.map((tip, index) => (
+              <div
+                key={index}
+                className="h-10 flex items-center justify-center text-gray-600 text-sm px-4 text-center"
               >
-                <g clipPath="url(#clip0_6727_1730)">
-                  <path
-                    d="M496.36 933.52V714.848C496.36 561.289 291.434 507.242 214.842 640.703L139.842 771.304C118.857 807.887 71.5077 820.157 35.068 798.026C-0.0838509 776.723 -9.85666 729.978 10.5223 694.373L365.525 76.1461C442.117 -57.2398 647.043 -3.26819 647.043 150.367V369.866C647.043 523.35 851.893 577.397 928.56 444.162L1140.46 75.6945C1217.12 -57.6162 1421.97 -3.56926 1421.97 149.99V371.071C1421.97 524.555 1626.67 578.602 1703.42 445.442L1780.23 312.131C1801.29 275.623 1848.64 263.353 1885.01 285.559C1920.16 307.012 1929.86 353.682 1909.4 389.287L1552.73 1008.42C1475.99 1141.58 1271.29 1087.53 1271.29 934.047V713.719C1271.29 560.235 1066.44 506.188 989.773 639.423L777.877 1007.89C701.21 1141.2 496.36 1087.15 496.36 933.595V933.52Z"
-                    fill="black"
-                  />
-                </g>
-                <defs>
-                  <clipPath id="clip0_6727_1730">
-                    <rect width="1920" height="1084" fill="white" />
-                  </clipPath>
-                </defs>
-              </svg>
-            </div>
+                {tip}
+              </div>
+            ))}
           </div>
-
-          <div className="text-[#000000] font-medium">Hang tight...</div>
-
-          <div className="relative h-[115px] pt-4 pb-8 -mt-4 w-[280px] overflow-hidden">
-            <div className="absolute inset-x-0 top-0 h-4 z-10 bg-gradient-to-t from-transparent to-[#f9f9f9]" />
-            <div
-              className="transition-transform duration-500 ease-in-out"
-              style={{ transform: `translateY(-${currentTipIndex * 48 + 4}px)` }}
-            >
-              {tips.map((tip, index) => (
-                <div
-                  key={index}
-                  className={`h-8 mb-4 flex items-center justify-center text-[#666666] text-sm leading-[1.2] transition-opacity duration-500 ${index === currentTipIndex ? 'opacity-100' : 'opacity-50'}`}
-                >
-                  {tip}
-                </div>
-              ))}
-            </div>
-            <div className="absolute inset-x-0 bottom-0 h-16 z-10 bg-gradient-to-b from-transparent to-[#f9f9f9]" />
-          </div>
+          <div className="absolute inset-x-0 bottom-0 h-4 z-10 bg-gradient-to-t from-blue-50 to-transparent"></div>
         </div>
       </div>
     </div>
@@ -93,22 +73,14 @@ const LoadingScreen = () => {
 
 export function App() {
   const [isLoading, setIsLoading] = useState(true);
+  const { needsUpdate, updateApp, canInstall, installApp } = usePWA();
 
   useEffect(() => {
-    // Load Google Fonts
-    const link = document.createElement('link');
-    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-
-    // Simulate app loading
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 2000);
 
-    return () => {
-      clearTimeout(timer);
-    };
+    return () => clearTimeout(timer);
   }, []);
 
   if (isLoading) {
@@ -116,21 +88,51 @@ export function App() {
   }
 
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      
-      <Route element={<MainLayout />}>
-        <Route index element={<HomePage />} /> {/* Add index route */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/courses" element={<CoursesPage />} />
-        <Route path="/courses/:courseId" element={<CourseDetailPage />} />
-        <Route path="/courses/:courseId/lessons/:lessonId" element={<CourseDetailPage />} />
-        <Route path="/my-learning" element={<MyLearningPage />} />
-        <Route path="/assistant" element={<AiAssistantPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Route>
-    </Routes>
+    <AuthProvider>
+      {needsUpdate && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <div className="bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg">
+            <p className="mb-2">A new version is available!</p>
+            <button
+              onClick={updateApp}
+              className="bg-white text-blue-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-50"
+            >
+              Update now
+            </button>
+          </div>
+        </div>
+      )}
+
+      {canInstall && (
+        <div className="fixed bottom-4 left-4 z-50">
+          <div className="bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg">
+            <p className="mb-2">Install BrainWave for the best experience</p>
+            <button
+              onClick={installApp}
+              className="bg-white text-gray-800 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-100"
+            >
+              Install
+            </button>
+          </div>
+        </div>
+      )}
+
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        
+        <Route element={<MainLayout />}>
+          <Route index element={<HomePage />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/courses" element={<CoursesPage />} />
+          <Route path="/courses/:courseId" element={<CourseDetailPage />} />
+          <Route path="/courses/:courseId/lessons/:lessonId" element={<CourseDetailPage />} />
+          <Route path="/my-learning" element={<MyLearningPage />} />
+          <Route path="/assistant" element={<AiAssistantPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
+    </AuthProvider>
   );
 }
 

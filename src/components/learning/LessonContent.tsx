@@ -1,195 +1,208 @@
-import React, { useState, useEffect } from 'react';
-import { Lesson } from '../../types';
-import Button from '../ui/Button';
-import useUserStore from '../../store/userStore';
-import { generateLearningContent } from '../../utils/geminiApi';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
+import Button from '../ui/Button';
+import { Lesson } from '../../types';
+import { SpeechService } from '../../services/speechService';
+import { useVoicePreferences } from '../../hooks/useVoicePreferences';
+import ReactMarkdown from 'react-markdown';
 
-interface LessonContentProps {
+interface Props {
   lesson: Lesson;
   onComplete: () => void;
 }
 
-const LessonContent: React.FC<LessonContentProps> = ({ lesson, onComplete }) => {
-  const [content, setContent] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isCompleted, setIsCompleted] = useState<boolean>(false);
-  const { user, addCompletedLesson, addPoints } = useUserStore();
+const LessonContent: React.FC<Props> = ({ lesson, onComplete }) => {
+  const [isReading, setIsReading] = useState(false);
+  const [currentSection, setCurrentSection] = useState(0);
+  const [isListening, setIsListening] = useState(false);
+  const speechService = useRef(new SpeechService());
+  const { preferences } = useVoicePreferences();
+
+  // Split content into sections by headers for better navigation
+  const sections = lesson.content
+    .split(/(?=#{1,3}\s)/)
+    .filter(section => section.trim());
 
   useEffect(() => {
-    if (user && user.progress.completedLessons.includes(lesson.id)) {
-      setIsCompleted(true);
+    if (preferences.speechEnabled && preferences.enabled) {
+      speechService.current.speak(
+        'Lesson loaded: ' + lesson.title,
+        {
+          rate: preferences.rate,
+          pitch: preferences.pitch,
+          voice: preferences.selectedVoice
+        }
+      );
     }
 
-    const fetchContent = async () => {
-      setIsLoading(true);
-      try {
-        // If lesson has predefined content, use it, otherwise generate with AI
-        if (lesson.content) {
-          setContent(lesson.content);
-        } else {
-          const preferences = user?.preferences || { 
-            learningStyle: 'visual',
-            difficulty: 'beginner' 
-          };
-          
-          const generatedContent = await generateLearningContent(
-            lesson.title,
-            preferences.difficulty,
-            preferences.learningStyle,
-            `Learning about ${lesson.title} with interests in ${preferences.interests?.join(', ') || 'general topics'}`
-          );
-          
-          setContent(generatedContent);
-        }
-      } catch (error) {
-        console.error('Error fetching lesson content:', error);
-        setContent('Error loading content. Please try again later.');
-      } finally {
-        setIsLoading(false);
-      }
+    return () => {
+      speechService.current.cancel();
     };
+  }, [lesson, preferences]);
 
-    fetchContent();
-  }, [lesson, user]);
+  const handleVoiceCommand = (command: string) => {
+    const normalizedCommand = command.toLowerCase().trim();
 
-  const handleComplete = () => {
-    if (!isCompleted && user) {
-      addCompletedLesson(lesson.id);
-      addPoints(50); // Award points for completing a lesson
-      setIsCompleted(true);
-      onComplete();
+    if (normalizedCommand.includes('next section') || normalizedCommand.includes('next page')) {
+      if (currentSection < sections.length - 1) {
+        setCurrentSection(prev => prev + 1);
+        readSection(currentSection + 1);
+      }
+    } else if (normalizedCommand.includes('previous section') || normalizedCommand.includes('previous page')) {
+      if (currentSection > 0) {
+        setCurrentSection(prev => prev - 1);
+        readSection(currentSection - 1);
+      }
+    } else if (normalizedCommand.includes('complete') || normalizedCommand.includes('finish')) {
+      handleComplete();
+    } else if (normalizedCommand.includes('read') || normalizedCommand.includes('start reading')) {
+      readSection(currentSection);
+    } else if (normalizedCommand.includes('stop') || normalizedCommand.includes('pause')) {
+      stopReading();
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center p-8">
-        <div className="w-12 h-12 border-4 border-blue-400 border-t-blue-600 rounded-full animate-spin"></div>
-        <p className="mt-4 text-gray-600">Loading lesson content...</p>
-      </div>
-    );
-  }
+  const toggleVoiceCommands = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
 
-  // Parse markdown content - in a real app, you would use a markdown parser
-  // This is a simplified version
-  const renderContent = () => {
-    // Split content by lines and render each differently based on markdown syntax
-    const lines = content.split('\n');
-    return lines.map((line, index) => {
-      if (line.startsWith('# ')) {
-        return (
-          <h1 key={index} className="text-3xl font-bold mt-6 mb-4">
-            {line.substring(2)}
-          </h1>
-        );
-      } else if (line.startsWith('## ')) {
-        return (
-          <h2 key={index} className="text-2xl font-bold mt-5 mb-3">
-            {line.substring(3)}
-          </h2>
-        );
-      } else if (line.startsWith('### ')) {
-        return (
-          <h3 key={index} className="text-xl font-bold mt-4 mb-2">
-            {line.substring(4)}
-          </h3>
-        );
-      } else if (line.startsWith('- ')) {
-        return (
-          <li key={index} className="ml-6 mb-2">
-            {line.substring(2)}
-          </li>
-        );
-      } else if (line.startsWith('```')) {
-        return (
-          <pre key={index} className="bg-gray-100 p-4 rounded-md my-4 overflow-x-auto">
-            <code>{line.substring(3)}</code>
-          </pre>
-        );
-      } else if (line.trim() === '') {
-        return <div key={index} className="h-4"></div>;
-      } else {
-        return (
-          <p key={index} className="mb-4 leading-relaxed">
-            {line}
-          </p>
-        );
+  const startListening = () => {
+    if (!speechService.current.isSupported()) {
+      alert('Speech recognition is not supported in your browser');
+      return;
+    }
+
+    setIsListening(true);
+    speechService.current.startListening((text, isFinal) => {
+      if (isFinal) {
+        handleVoiceCommand(text);
       }
     });
   };
 
+  const stopListening = () => {
+    setIsListening(false);
+    speechService.current.stopListening();
+  };
+
+  const readSection = (sectionIndex: number) => {
+    if (!preferences.speechEnabled || !preferences.enabled) return;
+
+    setIsReading(true);
+    speechService.current.speak(
+      sections[sectionIndex],
+      {
+        rate: preferences.rate,
+        pitch: preferences.pitch,
+        voice: preferences.selectedVoice
+      }
+    );
+  };
+
+  const stopReading = () => {
+    setIsReading(false);
+    speechService.current.cancel();
+  };
+
+  const handleComplete = () => {
+    if (preferences.speechEnabled && preferences.enabled) {
+      speechService.current.speak('Congratulations! You have completed this lesson.');
+    }
+    onComplete();
+  };
+
   return (
-    <motion.div 
-      className="max-w-3xl mx-auto p-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{lesson.title}</h1>
-        <p className="text-gray-600">{lesson.description}</p>
-        <div className="flex items-center mt-4 text-sm text-gray-500">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          {lesson.estimatedDuration} min read
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-900">{lesson.title}</h1>
+        
+        <div className="flex items-center gap-2">
+          {preferences.enabled && (
+            <button
+              onClick={toggleVoiceCommands}
+              className={`p-2 rounded-full ${
+                isListening
+                  ? 'bg-red-100 text-red-700'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+              title={isListening ? 'Stop voice commands' : 'Enable voice commands'}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                />
+              </svg>
+            </button>
+          )}
+
+          {preferences.speechEnabled && preferences.enabled && (
+            <button
+              onClick={() => isReading ? stopReading() : readSection(currentSection)}
+              className={`p-2 rounded-full ${
+                isReading
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+              title={isReading ? 'Stop reading' : 'Read aloud'}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.536a5 5 0 001.414 1.414m2.828-9.9a9 9 0 012.828-2.828"
+                />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="prose prose-blue max-w-none">
-        {renderContent()}
-      </div>
+      <motion.div
+        key={currentSection}
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        className="prose max-w-none"
+      >
+        <ReactMarkdown>{sections[currentSection]}</ReactMarkdown>
+      </motion.div>
 
-      {lesson.resources && lesson.resources.length > 0 && (
-        <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-          <h3 className="text-lg font-semibold mb-2">Additional Resources</h3>
-          <ul className="space-y-2">
-            {lesson.resources.map((resource) => (
-              <li key={resource.id} className="flex items-center">
-                <span className="mr-2">
-                  {resource.type === 'video' && (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-                      <path d="M14 6a2 2 0 012-2h2a2 2 0 012 2v8a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z" />
-                    </svg>
-                  )}
-                  {resource.type === 'article' && (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0v12h8V4H6z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                  {resource.type === 'practice' && (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </span>
-                <a 
-                  href={resource.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 hover:underline"
-                >
-                  {resource.title}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div className="mt-8 flex justify-center">
+      <div className="flex justify-between items-center pt-6 border-t">
         <Button
-          onClick={handleComplete}
-          variant="primary"
-          size="lg"
-          disabled={isCompleted}
+          variant="outline"
+          onClick={() => {
+            if (currentSection > 0) {
+              setCurrentSection(prev => prev - 1);
+              readSection(currentSection - 1);
+            }
+          }}
+          disabled={currentSection === 0}
         >
-          {isCompleted ? 'Completed ✓' : 'Mark as Complete'}
+          Previous Section
         </Button>
+
+        {currentSection === sections.length - 1 ? (
+          <Button onClick={handleComplete}>Complete Lesson</Button>
+        ) : (
+          <Button
+            onClick={() => {
+              setCurrentSection(prev => prev + 1);
+              readSection(currentSection + 1);
+            }}
+          >
+            Next Section
+          </Button>
+        )}
       </div>
-    </motion.div>
+    </div>
   );
 };
 

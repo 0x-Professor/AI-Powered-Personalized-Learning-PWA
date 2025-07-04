@@ -10,15 +10,27 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@firebase/auth": "^1.10.8",
+    "@firebase/firestore": "^4.8.0",
+    "@firebase/messaging": "^0.12.22",
     "@google/generative-ai": "^0.24.1",
     "@heroicons/react": "^2.2.0",
+    "firebase": "^11.10.0",
     "framer-motion": "^12.23.0",
+    "idb": "^8.0.3",
     "lucide-react": "^0.510.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-hook-form": "^7.59.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.6.3",
     "uuid": "^11.1.0",
+    "vite-plugin-pwa": "^1.0.1",
+    "workbox-core": "^7.3.0",
+    "workbox-precaching": "^7.3.0",
+    "workbox-routing": "^7.3.0",
+    "workbox-strategies": "^7.3.0",
+    "workbox-window": "^7.3.0",
     "zustand": "^5.0.6"
   },
   "devDependencies": {

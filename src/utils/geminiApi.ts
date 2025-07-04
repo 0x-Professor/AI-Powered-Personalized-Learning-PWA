@@ -1,160 +1,102 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Note: In a production environment, you would want to secure your API key
-// This is just for demonstration purposes
-const API_KEY = "AIzaSyAnGqvQTwErwyCtA0-0BRJcDrt3zo9DKIg";
-const genAI = new GoogleGenerativeAI(API_KEY);
+const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-export const generateLearningContent = async (
-  topic: string,
-  difficulty: string,
-  learningStyle: string,
-  userContext: string
-): Promise<string> => {
+export const generateLearningContent = async (topic: string, context: string): Promise<string> => {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    
-    const prompt = `
-      Generate personalized learning content about "${topic}" for a ${difficulty} level student.
-      Their preferred learning style is ${learningStyle}.
-      Additional context about the student: ${userContext}
-      
-      Format the content in markdown with:
-      - Clear section headings
-      - Concise explanations
-      - Relevant examples
-      - A small practice exercise
-      - 2-3 key takeaways
-      
-      Keep the content engaging, accurate, and tailored to their learning style.
-    `;
+    const prompt = `Create a detailed lesson about ${topic}. 
+    Context: ${context}
+    Include:
+    - Clear explanations
+    - Examples
+    - Key takeaways
+    - Practice exercises
+    Format the content in markdown.`;
     
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const text = response.text();
-    
-    return text;
+    return response.text();
   } catch (error) {
-    console.error("Error generating content with Gemini:", error);
-    return "Sorry, I couldn't generate content at this time. Please try again later.";
+    console.error('Error generating learning content:', error);
+    throw error;
   }
 };
 
-export const generateQuiz = async (
-  topic: string,
-  difficulty: string
-): Promise<string> => {
+export const generateQuiz = async (topic: string, difficulty: string): Promise<string> => {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    
-    const prompt = `
-      Generate a quiz about "${topic}" for a ${difficulty} level student.
-      Create 5 multiple-choice questions with 4 options each.
-      
-      Format the response as JSON with this structure:
-      {
-        "questions": [
-          {
-            "text": "Question text",
-            "options": ["Option A", "Option B", "Option C", "Option D"],
-            "correctOptionIndex": 0,
-            "explanation": "Why this answer is correct"
-          }
-        ]
-      }
-      
-      Ensure the questions test different aspects of the topic and are appropriate for the ${difficulty} level.
-    `;
+    const prompt = `Create a quiz about ${topic} at ${difficulty} level.
+    Return a JSON string with this structure:
+    {
+      "questions": [
+        {
+          "id": "string",
+          "text": "question text",
+          "options": ["option1", "option2", "option3", "option4"],
+          "correctOptionIndex": number,
+          "explanation": "why this answer is correct"
+        }
+      ]
+    }
+    Include 5 questions that test understanding of key concepts.`;
     
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const text = response.text();
-    
-    return text;
+    return response.text();
   } catch (error) {
-    console.error("Error generating quiz with Gemini:", error);
-    return JSON.stringify({
-      questions: [
-        {
-          text: "Sorry, I couldn't generate a quiz at this time. Please try again later.",
-          options: ["Retry", "Contact support", "Try a different topic", "Come back later"],
-          correctOptionIndex: 0,
-          explanation: "Technical issues can sometimes occur with AI services."
-        }
-      ]
-    });
+    console.error('Error generating quiz:', error);
+    throw error;
   }
 };
 
 export const getPersonalizedRecommendations = async (
-  completedTopics: string[],
+  completedLessons: string[],
   interests: string[],
   learningGoals: string
 ): Promise<string> => {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const prompt = `Create personalized learning recommendations based on:
+    Completed lessons: ${completedLessons.join(', ')}
+    Interests: ${interests.join(', ')}
+    Learning goals: ${learningGoals}
     
-    const prompt = `
-      Generate personalized learning recommendations for a student.
-      
-      They have completed these topics: ${completedTopics.join(", ")}
-      Their interests include: ${interests.join(", ")}
-      Their learning goals are: ${learningGoals}
-      
-      Suggest 3-5 new topics they should explore next, explaining why each recommendation would benefit them.
-      Format the response as JSON with this structure:
-      {
-        "recommendations": [
-          {
-            "topic": "Topic name",
-            "reason": "Why this topic is recommended",
-            "difficulty": "beginner|intermediate|advanced"
-          }
-        ]
-      }
-    `;
+    Return a JSON string with this structure:
+    {
+      "recommendations": [
+        {
+          "topic": "string",
+          "reason": "why this is recommended",
+          "difficulty": "beginner|intermediate|advanced"
+        }
+      ]
+    }
+    Provide 3 recommendations that build upon completed lessons and align with interests.`;
     
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const text = response.text();
-    
-    return text;
+    return response.text();
   } catch (error) {
-    console.error("Error generating recommendations with Gemini:", error);
-    return JSON.stringify({
-      recommendations: [
-        {
-          topic: "Error retrieving recommendations",
-          reason: "Please try again later or contact support if the issue persists.",
-          difficulty: "beginner"
-        }
-      ]
-    });
+    console.error('Error generating recommendations:', error);
+    throw error;
   }
 };
 
 export const answerUserQuestion = async (
   question: string,
-  topicContext: string
+  currentTopic?: string
 ): Promise<string> => {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const prompt = `Answer this learning-related question: "${question}"
+    ${currentTopic ? `Context: The current topic is ${currentTopic}` : ''}
     
-    const prompt = `
-      Answer this question about ${topicContext}:
-      "${question}"
-      
-      Provide a clear, concise, and accurate answer. Include examples if helpful.
-      If the question is unclear or requires clarification, explain what additional information would be needed.
-    `;
+    Provide a clear, concise explanation with examples if relevant.
+    If applicable, suggest additional resources or next steps for learning.`;
     
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const text = response.text();
-    
-    return text;
+    return response.text();
   } catch (error) {
-    console.error("Error answering question with Gemini:", error);
-    return "I'm sorry, I couldn't process your question at this time. Please try again later.";
+    console.error('Error answering question:', error);
+    throw error;
   }
 };
