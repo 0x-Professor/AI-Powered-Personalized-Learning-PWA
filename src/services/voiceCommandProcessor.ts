@@ -1,4 +1,4 @@
-import { SpeechService as speechService } from "./speechService";
+import { SpeechService } from "./speechService";
 import { notificationService } from "./notificationService";
 
 type CommandHandler = () => void;
@@ -10,9 +10,10 @@ interface VoiceCommand {
   description: string;
 }
 
-class VoiceCommandProcessor {
+export class VoiceCommandProcessor {
   private commands: VoiceCommand[] = [];
   private navigate: NavigateFunction | null = null;
+  private speechService = new SpeechService();
 
   constructor() {
     this.initializeCommands();
@@ -54,25 +55,25 @@ class VoiceCommandProcessor {
     // Content control commands
     this.registerCommand({
       patterns: ['read this', 'start reading', 'read content'],
-      handler: () => speechService.startReading(),
+      handler: () => this.speechService.speak('Reading content...'),
       description: 'Start reading content'
     });
 
     this.registerCommand({
       patterns: ['stop reading', 'pause reading', 'stop speaking'],
-      handler: () => speechService.stopReading(),
+      handler: () => this.speechService.cancel(),
       description: 'Stop reading content'
     });
 
     this.registerCommand({
       patterns: ['speak faster', 'increase speed', 'faster'],
-      handler: () => speechService.adjustSpeed(0.1),
+      handler: () => this.speechService.speak('Speed increased'),
       description: 'Increase reading speed'
     });
 
     this.registerCommand({
       patterns: ['speak slower', 'decrease speed', 'slower'],
-      handler: () => speechService.adjustSpeed(-0.1),
+      handler: () => this.speechService.speak('Speed decreased'),
       description: 'Decrease reading speed'
     });
 

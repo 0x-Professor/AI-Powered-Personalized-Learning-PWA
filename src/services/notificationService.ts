@@ -34,8 +34,12 @@ class NotificationManager {
     };
   }
 
-  private notify(message: string, type: NotificationType) {
+  public notify(message: string, type: NotificationType) {
     this.listeners.forEach(listener => listener({ message, type }));
+  }
+
+  public show({ type = 'info', message }: { type: NotificationType; message: string }) {
+    this.notify(message, type);
   }
 }
 
@@ -136,3 +140,5 @@ export const requestNotificationPermission = async () => {
 export const subscribeToNotifications = (listener: NotificationListener) => {
   return manager.subscribe(listener);
 };
+
+export const notificationService = manager;

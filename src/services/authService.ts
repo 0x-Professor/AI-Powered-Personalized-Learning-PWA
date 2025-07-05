@@ -65,7 +65,7 @@ const saveUserToFirestore = async (uid: string, userData: User) => {
   });
 };
 
-const getUserFromFirestore = async (uid: string): Promise<User | null> => {
+export const getUserFromFirestore = async (uid: string): Promise<User | null> => {
   const userDoc = await getDoc(doc(db, 'users', uid));
   if (!userDoc.exists()) return null;
   
@@ -78,4 +78,8 @@ const getUserFromFirestore = async (uid: string): Promise<User | null> => {
     },
     joinedAt: new Date(data.joinedAt)
   } as User;
+};
+
+export const updateUserPreferences = async (uid: string, preferences: LearningPreferences) => {
+  await setDoc(doc(db, 'users', uid), { preferences }, { merge: true });
 };
