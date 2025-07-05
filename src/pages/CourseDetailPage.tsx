@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import Button from '../components/ui/Button';
+import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import LessonContent from '../components/learning/LessonContent';
 import QuizComponent from '../components/learning/QuizComponent';

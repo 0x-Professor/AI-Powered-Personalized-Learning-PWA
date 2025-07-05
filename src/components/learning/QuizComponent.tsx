@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Quiz, Question } from '../../types';
-import Button from '../ui/Button';
+import { Button } from '../ui/Button';
 import { Card, CardContent } from '../ui/Card';
 import { generateQuiz } from '../../utils/geminiApi';
 import useUserStore from '../../store/userStore';

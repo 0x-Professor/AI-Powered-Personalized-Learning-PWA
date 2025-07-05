@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Button from '../components/ui/Button';
+import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import useUserStore from '../store/userStore';
 
@@ -10,7 +10,7 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useUserStore();
+  const { signIn } = useUserStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,31 +23,7 @@ const LoginPage: React.FC = () => {
       
       // Demo login - in a real app, you would validate with a backend
       if (email === 'demo@example.com' && password === 'password') {
-        login({
-          id: 'user1',
-          name: 'Demo User',
-          email: 'demo@example.com',
-          preferences: {
-            interests: ['Web Development', 'AI', 'Data Science'],
-            learningStyle: 'visual',
-            difficulty: 'intermediate',
-            dailyGoal: 30
-          },
-          progress: {
-            streakDays: 3,
-            lastActive: new Date(),
-            completedLessons: ['lesson1', 'lesson2'],
-            points: 150,
-            badges: [{
-              id: 'badge1',
-              name: 'First Steps',
-              description: 'Completed your first lesson',
-              imageUrl: '/badges/first-steps.png',
-              earnedAt: new Date()
-            }]
-          },
-          joinedAt: new Date()
-        });
+        await signIn(email, password);
         navigate('/');
       } else {
         setError('Invalid credentials. Try demo@example.com / password');

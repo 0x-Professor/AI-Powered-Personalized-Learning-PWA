@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import CourseCard from '../components/learning/CourseCard';
 import { Card, CardContent } from '../components/ui/Card';
-import Button from '../components/ui/Button';
+import { Button } from '../components/ui/Button';
 import useUserStore from '../store/userStore';
 import { mockCourses } from '../data/mockData';
 import { motion } from 'framer-motion';

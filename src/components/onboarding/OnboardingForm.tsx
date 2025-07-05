@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LearningPreferences } from '../../types';
-import Button from '../ui/Button';
+import { Button } from '../ui/Button';
 import useUserStore from '../../store/userStore';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';

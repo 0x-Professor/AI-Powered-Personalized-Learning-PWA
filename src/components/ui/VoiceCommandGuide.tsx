@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Dialog } from '@headlessui/react';
-import { useVoiceCommands } from '../../hooks/useVoiceCommands';
 import { Button } from './Button';
 
 interface VoiceCommandGuideProps {
   isOpen: boolean;
   onClose: () => void;
+  className?: string;
 }
 
-export const VoiceCommandGuide: React.FC<VoiceCommandGuideProps> = ({ isOpen, onClose }) => {
-  const { availableCommands } = useVoiceCommands();
+export const VoiceCommandGuide: React.FC<VoiceCommandGuideProps> = ({ isOpen, onClose, className = '' }) => {
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
@@ -62,13 +61,14 @@ export const VoiceCommandGuide: React.FC<VoiceCommandGuideProps> = ({ isOpen, on
   const displayedCommands = showAll ? commandExamples : commandExamples.slice(0, 2);
 
   return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      className="fixed inset-0 z-50 overflow-y-auto"
-    >
+    <div className={className}>
+      <Dialog
+        open={isOpen}
+        onClose={onClose}
+        className="fixed inset-0 z-50 overflow-y-auto"
+      >
       <div className="flex min-h-screen items-center justify-center">
-        <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
+        <div className="fixed inset-0 bg-black opacity-30" />
 
         <div className="relative mx-auto max-w-2xl rounded-xl bg-white p-6 shadow-lg">
           <Dialog.Title className="text-2xl font-bold mb-4">
@@ -105,6 +105,7 @@ export const VoiceCommandGuide: React.FC<VoiceCommandGuideProps> = ({ isOpen, on
           </p>
         </div>
       </div>
-    </Dialog>
+      </Dialog>
+    </div>
   );
 };

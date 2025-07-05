@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card } from './Card';
-import Button from './Button';
+import { Button } from './Button';
 import { VoiceCommandGuide } from './VoiceCommandGuide';
 import { useUserPreferences } from '../../hooks/useUserPreferences';
 import useUserStore from '../../store/userStore';

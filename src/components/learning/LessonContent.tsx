@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import Button from '../ui/Button';
+import { Button } from '../ui/Button';
 import { Lesson } from '../../types';
 import { SpeechService } from '../../services/speechService';
 import { useVoicePreferences } from '../../hooks/useVoicePreferences';
