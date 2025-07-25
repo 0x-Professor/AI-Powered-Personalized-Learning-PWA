@@ -74,7 +74,7 @@ To get a local copy up and running, follow these simple steps.
 
 1. Clone the repo
    ```sh
-   git clone https://github.com/your-username/brainwave.git
+   git clone https://github.com/0x-Professor/AI-Powered-Personalized-Learning-PWA.git
    ```
 2. Install NPM packages
     ```sh
